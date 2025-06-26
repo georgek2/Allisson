@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <![endif]-->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+    </head>
+    <body>
+        
+
+        <style>
+            body{
+                background-color:rgba(123, 232, 223);
+                height:1200px;
+            }
+            h1, h3{
+                text-align:center;
+                margin: 34px auto 4%;
+            }
+
+            #agents{
+                display:flex;
+                justify-content:space-between;
+                justify-items:center;
+                align-items:center;
+                max-width:40%;
+                margin:auto;
+            }
+
+            #agents div{
+                min-width:60px;
+                border:2px solid black;
+                border-radius:6px;
+            }
+
+            #agents p{
+                text-align:center;
+                font-size:20px;
+            }
+            form{
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+                justify-content:center;
+                margin:0 auto;
+            }
+
+            form div{
+                max-width:600px;
+            }
+
+            form input[label="objective"]{
+                width:600px;
+                height:100px;
+                margin:10px auto;
+                text-align:start;
+                border:none;
+                border-radius:10px;
+                background-color:whitesmoke;
+            }
+            form input[label="task"]{
+                width:600px;
+                height:300px;
+                margin:10px auto;
+                text-align:start;
+                border:none;
+                border-radius:10px;
+                background-color:whitesmoke;
+            }
+
+            main{
+                max-width:800px;
+                margin:0 auto;
+                padding:20px;
+                background-color:rgba(255, 255, 255, 0.8);
+                border-radius:10px;
+            }
+        </style>
+        <header>
+            <div id="line">
+                <p></p>
+            </div>
+            <h1>
+                <i>Allisson</i>
+            </h1> 
+            
+            <h1>
+                Technologia Set-Up Assistant
+            </h1> 
+            
+            <div id="agents">
+
+                {% comment %} Fiona {% endcomment %}
+                <a>
+                    <div class="agent ">
+                        <p>
+                            Fiona
+                        </p>
+                    </div>
+                </a>
+
+                {% comment %} Lisa {% endcomment %}
+                <div class="agent ">
+                    <p>
+                        Lisa
+                    </p>
+                </div>     
+                
+                {% comment %} Ben {% endcomment %}
+                <div class="agent ">
+                    <p>
+                        Ben
+                    </p>
+                </div>
+            </div>
+            <div style="text-align:center">
+                <p>
+                    My Goal Right Now
+                </p>
+                <form method='POST' action=''>
+                    {% csrf_token %}
+                    {% comment %} Objective and Task Input Fields {% endcomment %}
+                    <div class="objective">
+                        <span>Objective</span>
+                        <input id='objective' type='text' label='objective' name='objective' placeholder='What do you want to achieve?'>
+                    </div>
+                    <div class="task">
+                        <span>Task</span>
+                        <input id='task' type='text' label='task' name='task' placeholder='What task do you want to accomplish?'>
+                    </div>
+                    <input type='submit' label='Ask AI'>
+                </form>
+
+            </div>
+        </header>
+        
+        <main id="output">
+            <div id="ai-response">
+                <h3>Here's my response</h3>
+                <div>
+                    {% comment %} Display AI Response {% endcomment %}
+                    {% if prompt %}
+                        <p>Prompt: {{ prompt }}</p>
+                    {% else %}
+                        <p>No prompt provided yet.</p>
+                    {% endif %}
+                </div>
+                {% comment %} Have AI Response Displayed in an Appealing Way {% endcomment %}
+                {% if result %}
+                    <div class="response">
+                        <p>{{ result }}</p>
+                    </div>
+                {% else %}
+                    <div class="response">
+                        <p>No response yet. Please enter your objective and task.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+
+
+        <script src="" async defer></script>
+    </body>
+</html>
