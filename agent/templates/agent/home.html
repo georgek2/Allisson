@@ -11,10 +11,6 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="">
-    </head>
-    <body>
-        
-
         <style>
             body{
                 background-color:rgba(123, 232, 223);
@@ -82,7 +78,90 @@
                 background-color:rgba(255, 255, 255, 0.8);
                 border-radius:10px;
             }
+
+            /* NEW STYLES FOR CHAT INTERFACE */
+            #chat-history {
+                max-width: 700px;
+                margin: 0 auto 30px auto;
+                padding: 20px;
+                background: #f8f8f8;
+                border-radius: 10px;
+            }
+
+            #chat-history h3 {
+                text-align: center;
+            }
+
+            #chat-history div {
+                margin-bottom: 20px;
+            }
+
+            #chat-history div div {
+                padding: 10px 15px;
+                border-radius: 8px;
+                max-width: 80%;
+            }
+
+            #chat-history div div strong {
+                display: block;
+            }
+
+            #chat-history div div:nth-child(1) {
+                background: #e0f7fa;
+                margin-left: auto;
+                text-align: right;
+            }
+
+            #chat-history div div:nth-child(2) {
+                background: #fffde7;
+                margin-right: auto;
+                text-align: left;
+            }
+
+            #chat-form {
+                max-width: 700px;
+                margin: 0 auto;
+            }
+
+            #chat-form form {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
+
+            #chat-form button {
+                padding: 8px 18px;
+                border-radius: 6px;
+                background: #00bcd4;
+                color: white;
+                border: none;
+            }
+
+            .chat-user {
+                background:#e0f7fa;padding:10px 15px;border-radius:8px 8px 0 0;max-width:80%;margin-left:auto;text-align:right;
+            }
+            .chat-ai {
+                background:#fffde7;padding:10px 15px;border-radius:0 0 8px 8px;max-width:80%;margin-right:auto;text-align:left;
+            }
+            /* Style for markdown headings */
+            .chat-ai h1, .chat-ai h2, .chat-ai h3, .chat-ai h4 {
+                margin: 10px 0 6px 0;
+                color:rgb(37, 128, 117);
+            }
+            .chat-ai ul, .chat-ai ol {
+                margin: 8px 0 8px 20px;
+            }
+            .chat-ai p {
+                margin: 6px 0;
+            }
+            .chat-ai strong {
+                color: #795548;
+            }
         </style>
+    </head>
+    <body>
+        
+
         <header>
             <div id="line">
                 <p></p>
@@ -142,27 +221,43 @@
         </header>
         
         <main id="output">
-            <div id="ai-response">
-                <h3>Here's my response</h3>
-                <div>
-                    {% comment %} Display AI Response {% endcomment %}
-                    {% if prompt %}
-                        <p>Prompt: {{ prompt }}</p>
-                    {% else %}
-                        <p>No prompt provided yet.</p>
-                    {% endif %}
-                </div>
-                {% comment %} Have AI Response Displayed in an Appealing Way {% endcomment %}
-                {% if result %}
-                    <div class="response">
-                        <p>{{ result }}</p>
-                    </div>
+            <!-- Allisson Chat conversation history -->
+            <div id="chat-history" style="max-width:700px;margin:0 auto 30px auto;padding:20px;background:#f8f8f8;border-radius:10px;">
+                <h3 style="text-align:center;">AI Conversation</h3>>
+                {% if conversation %}
+                    {% for entry in conversation %}
+                        <div style="margin-bottom:20px;">
+                            <div class="chat-user">
+                                <strong>You:</strong> {{ entry.task }}
+                            </div>
+                            {% if entry.response %}
+                                <div class="chat-ai">
+                                    <strong>Allisson:</strong>
+                                    <div style="margin-top:4px;" >
+                                        <!-- Rendering HTML-formatted Allisson response -->
+                                        {{ entry.response|safe }} 
+                                        <!-- By default, Django escapes HTML for security -->
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
                 {% else %}
-                    <div class="response">
-                        <p>No response yet. Please enter your objective and task.</p>
-                    </div>
+                    <p style="text-align:center;">No conversation yet. Start by sending a prompt!</p>
                 {% endif %}
             </div>
+            <!-- END of Conversation -->
+
+            <!-- Chat prompt form at the bottom -->
+            <div id="chat-form" style="max-width:800px;margin:0 auto;">
+                <form method="POST" action="" style="display:flex;gap:10px;align-items:center;">
+                    {% csrf_token %}
+                    {{ form.task.label_tag }}
+                    {{ form.task }}
+                    <button type="submit" style="padding:8px 18px;border-radius:6px;background:#00bcd4;color:white;border:none;">Send</button>
+                </form>
+            </div>
+            
         </main>
 
 

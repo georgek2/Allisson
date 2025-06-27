@@ -7,6 +7,7 @@ import time
 import requests
 import json
 from dotenv import load_dotenv
+import markdown  # NEW: For converting markdown to HTML
 
 load_dotenv()
 
@@ -16,16 +17,16 @@ load_dotenv()
 def homepage(request):
     result = None
     prompt = None
+    # Get all previous prompts and responses for chat history
+    conversation = models.Prompt.objects.all()  # You can filter by user/session if needed
+    
     # Initialize the form
     if request.method == 'POST':
         form = forms.PromptForm(request.POST)
         
         if form.is_valid():
             user_prompt = form.cleaned_data
-            prompt = user_prompt.get('task')
-            
-            # Save the prompt to the database
-            form.save()
+            task_prompt = user_prompt.get('task')
             
             api_key = os.getenv('OPENROUTER_API_KEY')
             # Call the Allisson API
@@ -40,20 +41,31 @@ def homepage(request):
                     'model': 'openai/gpt-4o-mini',
                     'messages': [{
                         'role': 'user',
-                        'content': prompt
+                        'content': task_prompt
                     }],
                 })
             )
             
             if response.status_code != 200:
                 result = "Error: " + response.text
-            result = response.json()['choices'][0]['message']['content']
+            else:
+                raw_result = response.json()['choices'][0]['message']['content']
+                # NEW: Convert markdown to HTML for better formatting
+                result = markdown.markdown(raw_result, extensions=['extra', 'nl2br'])
+                
+            # Saving both prompt and response to the database
+            prompt_obj = form.save(commit=False)
+            prompt_obj.response = result  # Attaching the AI response as HTML
+            prompt_obj.save()  
+            # Refresh conversation 
+            conversation = models.Prompt.objects.all()
     else:
         form = forms.PromptForm() 
     context = {
         'form': form,
         'prompt':prompt,
-        'result': result 
+        'result': result,
+        'conversation': conversation  # Chat History
     }
     
     return render(request, 'agent/home.html', context)

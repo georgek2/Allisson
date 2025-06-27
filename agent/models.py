@@ -6,6 +6,7 @@ class Prompt(models.Model):
     
     objective = models.TextField()
     task = models.TextField()
+    response = models.TextField(null=True, blank=True)  # NEW: Store the AI's response for each prompt
 
     def __str__(self):
         
