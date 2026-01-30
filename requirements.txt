@@ -1,0 +1,15 @@
+backports.tarfile==1.2.0
+beautifulsoup4==4.14.3
+celery==5.6.2
+channels==4.3.2
+djangorestframework==3.16.1
+jaraco-context==6.1.0
+jaraco-functools==4.4.0
+jaraco.text==4.0.0
+litellm==1.81.5
+pip-chill==1.0.3
+platformdirs==4.4.0
+playwright==1.58.0
+python-linkedin-v2==0.9.4
+redis==7.1.0
+tomli==2.4.0
