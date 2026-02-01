@@ -1,15 +1,37 @@
-backports.tarfile==1.2.0
-beautifulsoup4==4.14.3
-celery==5.6.2
-channels==4.3.2
-djangorestframework==3.16.1
-jaraco-context==6.1.0
-jaraco-functools==4.4.0
-jaraco.text==4.0.0
-litellm==1.81.5
-pip-chill==1.0.3
-platformdirs==4.4.0
-playwright==1.58.0
-python-linkedin-v2==0.9.4
-redis==7.1.0
-tomli==2.4.0
+# Core Django
+Django==5.0.1
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+
+# Async & Real-time
+channels==4.0.0
+channels-redis==4.1.0
+daphne==4.0.0
+
+# Task Queue
+celery==5.3.6
+redis==5.0.1
+
+# AI & LLM
+openai==1.10.0
+litellm==1.17.0
+anthropic==0.8.1
+
+# Web Automation
+playwright==1.41.0
+beautifulsoup4==4.12.3
+requests==2.31.0
+
+# Social Media
+
+# Utilities
+python-dotenv==1.0.0
+python-dateutil==2.8.2
+pytz==2024.1
+
+# Database
+psycopg2-binary==2.9.9
+
+# Dev tools
+ipython==8.20.0
+black==24.1.1
