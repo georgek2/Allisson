@@ -21,7 +21,7 @@ class BaseAgent(ABC):
         name: str,
         role: str,
         model: str = "gemini/gemini-2.0-flash-exp",
-        temperature: float = 0.7,
+        temperature: float = 0.3,
         max_tokens: int = 2000
     ):
         self.name = name
@@ -120,26 +120,26 @@ class BaseAgent(ABC):
         
         system_prompt = f"""You are {self.name}, {self.role} in the Allisson Empire.
 
-Your capabilities: {', '.join(self.capabilities)}
+        Your capabilities: {', '.join(self.capabilities)}
 
-Analyze the user's command and extract structured information.
+        Analyze the user's command and extract structured information.
 
-Return ONLY valid JSON (no markdown, no explanation) with these fields:
-{{
-  "primary_action": "specific action to take",
-  "parameters": {{
-    "key": "value pairs of all relevant parameters"
-  }},
-  "priority": "urgent|high|medium|low",
-  "deadline": "if mentioned, otherwise null",
-  "success_criteria": "how to verify success"
-}}"""
-        
+        Return ONLY valid JSON (no markdown, no explanation) with these fields:
+        {{
+        "primary_action": "specific action to take",
+        "parameters": {{
+            "key": "value pairs of all relevant parameters"
+        }},
+        "priority": "urgent|high|medium|low",
+        "deadline": "if mentioned, otherwise null",
+        "success_criteria": "how to verify success"
+        }}"""
+                
         user_prompt = f"""Command: {command}
 
-Additional context: {json.dumps(context or {}, indent=2)}
+        Additional context: {json.dumps(context or {}, indent=2)}
 
-Return structured JSON analysis."""
+        Return structured JSON analysis."""
         
         try:
             response = await litellm.acompletion(
@@ -206,9 +206,9 @@ Return structured JSON analysis."""
         logger.info(f"{self.name} delegating to Allisson")
         
         # Import here to avoid circular imports
-        from agents.allisson import AlissonAgent
+        from agents.allisson import AllissonAgent
         
-        allisson = AlissonAgent()
+        allisson = AllissonAgent()
         return await allisson.route_task(intent, task, delegated_from=self.name)
     
     @sync_to_async
