@@ -1,13 +1,13 @@
 
 from typing import Dict, Any, Optional, List
-import litellm
+# import litellm
 import json
 import logging
 from agents.base import BaseAgent
 
 logger = logging.getLogger('allisson')
 
-class AlissonAgent(BaseAgent):
+class AllissonAgent(BaseAgent):
     """
     CEO of the Allisson Empire.
     
@@ -25,7 +25,7 @@ class AlissonAgent(BaseAgent):
         super().__init__(
             name="Allisson",
             role="Chief Executive Officer - Empire Orchestrator",
-            model="gemini/gemini-1.5-flash",
+            model="llama-3.3-70b-versatile",
             temperature=0.7
         )
         
@@ -237,16 +237,52 @@ class AlissonAgent(BaseAgent):
 
         Response (ONE WORD ONLY):"""
         
+        # Quick keyword-based heuristic to avoid unnecessary LLM calls during tests
+        action = (intent.get('primary_action') or '').lower()
+        params_text = json.dumps(intent.get('parameters', {})).lower()
+        combined = f"{action} {params_text}"
+
+        keyword_map = {
+            'hannah': ['tweet', 'twitter', 'post', 'linkedin', 'facebook', 'social'],
+            'lucy': ['research', 'researcher', 'study', 'analyze', 'report', 'web'],
+            'mike': ['stock', 'stocks', 'bitcoin', 'price', 'market', 'investment', 'invest'],
+            'joseph': ['workout', 'meal', 'fitness', 'exercise', 'nutrition', 'wellness'],
+            'melvin': ['freelance', 'freelancer', 'gig', 'gigs', 'portfolio', 'write', 'content'],
+            'steve': ['review', 'performance', 'optimize', 'quality', 'monitor']
+        }
+
+        for name, kws in keyword_map.items():
+            if any(k in combined for k in kws):
+                return name
+
+        # If heuristic didn't match, fall back to LLM-based routing
         try:
-            response = await litellm.acompletion(
-                model=self.model,
-                messages=[{"role": "user", "content": routing_prompt}],
-                temperature=0.3  # Lower temp for more consistent routing
+            from openai import OpenAI
+            import os
+            from dotenv import load_dotenv
+            import re
+
+            load_dotenv()
+
+            client = OpenAI(
+                api_key=os.getenv('GROQ_API_KEY'),
+                base_url="https://api.groq.com/openai/v1"
             )
-            
+
+            messages = [
+                {"role": "system", "content": routing_prompt},
+                {"role": "user", "content": f"Intent: {json.dumps(intent)}"}
+            ]
+
+            response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=messages
+            )
+
             specialist = response.choices[0].message.content.strip().lower()
-            
-            # Validate response
+            # Normalize the model output to a simple token (letters only)
+            specialist = re.sub(r"[^a-z]", "", specialist)
+
             if specialist in self.specialists:
                 return specialist
             elif specialist == "none":
@@ -254,7 +290,7 @@ class AlissonAgent(BaseAgent):
             else:
                 logger.warning(f"Invalid specialist selected: {specialist}")
                 return None
-                
+
         except Exception as e:
             logger.error(f"Specialist selection failed: {e}")
             return None
@@ -429,14 +465,28 @@ class AlissonAgent(BaseAgent):
         Return ONLY valid JSON:"""
         
         try:
-            response = await litellm.acompletion(
+            from openai import OpenAI
+            import os
+            from dotenv import load_dotenv
+            import asyncio
+
+            load_dotenv()
+
+            client = OpenAI(
+                api_key=os.getenv('GROQ_API_KEY'),
+                base_url="https://api.groq.com/openai/v1"
+            )
+
+            response = await asyncio.to_thread(
+                client.chat.completions.create,
                 model=self.model,
                 messages=[{"role": "user", "content": breakdown_prompt}],
-                temperature=0.5
+                temperature=0.5,
+                max_tokens=self.max_tokens
             )
-            
+
             return self._safe_json_parse(response.choices[0].message.content)
-            
+
         except Exception as e:
             logger.error(f"Subtask breakdown failed: {e}")
             return {"subtasks": []}

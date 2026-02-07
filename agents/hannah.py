@@ -1,5 +1,5 @@
 from typing import Dict, Any, List, Optional
-import litellm
+# import litellm
 import logging
 from agents.base import BaseAgent
 
@@ -21,7 +21,7 @@ class HannahAgent(BaseAgent):
         super().__init__(
             name="Hannah",
             role="Social Media Manager",
-            model="gemini/gemini-1.5-flash",
+            model="llama-3.3-70b-versatile",
             temperature=0.8  # Higher creativity for social content
         )
         
@@ -119,7 +119,7 @@ class HannahAgent(BaseAgent):
         # Get context from previous results if available
         context_data = params.get('previous_results', {})
         
-        content_prompt = f"""You are Hannah, a social media manager creating engaging content.
+        system_prompt = f"""You are Hannah, a social media manager creating engaging content.
 
         Task: Create a {platform} post
         Topic: {topic}
@@ -130,25 +130,40 @@ class HannahAgent(BaseAgent):
         """
                 
         if platform == 'twitter':
-            content_prompt += """- Maximum 280 characters
+            system_prompt += """- Maximum 280 characters
         - Engaging and conversational
         - Include 2-3 relevant hashtags
         - Call-to-action if appropriate
         - Avoid corporate speak - be human!"""
         elif platform == 'linkedin':
-            content_prompt += """- Professional but not stiff
+            system_prompt += """- Professional but not stiff
         - 1-3 paragraphs
         - Include industry insights
         - Relevant hashtags at end
         - Can include emojis sparingly"""
         
-        content_prompt += "\n\nGenerate the post content (just the text, no explanations):"
+        system_prompt += "\n\nGenerate the post content (just the text, no explanations):"
         
         try:
-            response = await litellm.acompletion(
-                model=self.model,
-                messages=[{"role": "user", "content": content_prompt}],
-                temperature=self.temperature
+            from openai import OpenAI
+            import os
+            
+            client = OpenAI(
+                api_key=os.getenv('GROQ_API_KEY'),
+                base_url="https://api.groq.com/openai/v1"
+            )
+            
+            # Run in thread pool to make it async-compatible
+            import asyncio
+            response = await asyncio.to_thread(
+                client.chat.completions.create,
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    # {"role": "user", "content": user_prompt}
+                ],
+                temperature=self.temperature,
+                max_tokens=self.max_tokens
             )
             
             content = response.choices[0].message.content.strip()

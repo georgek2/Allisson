@@ -20,7 +20,7 @@ class BaseAgent(ABC):
         self,
         name: str,
         role: str,
-        model: str = "gemini/gemini-2.0-flash-exp",
+        model: str = "llama-3.3-70b-versatile",
         temperature: float = 0.3,
         max_tokens: int = 2000
     ):
@@ -142,8 +142,19 @@ class BaseAgent(ABC):
         Return structured JSON analysis."""
         
         try:
-            response = await litellm.acompletion(
-                model=self.model,
+            from openai import OpenAI
+            import os
+            
+            client = OpenAI(
+                api_key=os.getenv('GROQ_API_KEY'),
+                base_url="https://api.groq.com/openai/v1"
+            )
+            
+            # Run in thread pool to make it async-compatible
+            import asyncio
+            response = await asyncio.to_thread(
+                client.chat.completions.create,
+                model="llama-3.3-70b-versatile",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}

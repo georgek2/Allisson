@@ -1,12 +1,13 @@
 import asyncio
 import os
 import django
-
+from dotenv import load_dotenv
 # Setup Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from agents.allisson import AlissonAgent
+load_dotenv()  # Load environment variables from .env file
+from agents.allisson import AllissonAgent
 
 async def test_allisson():
     """Test Allisson routing and Hannah execution"""
@@ -17,7 +18,7 @@ async def test_allisson():
     print()
     
     # Create Allisson
-    allisson = AlissonAgent()
+    allisson = AllissonAgent()
     
     # Test 1: Simple greeting
     print("Test 1: Simple greeting")
