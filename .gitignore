@@ -71,6 +71,8 @@ venv.bak/
 .env.development.local
 .env.test.local
 .env.production.local
+twitter_cookies.json
+twitter_session.json
 
 # IDE
 .vscode/

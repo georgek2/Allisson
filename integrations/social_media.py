@@ -592,14 +592,26 @@ class TwitterAutomation(SocialMediaAutomation):
             try:
                 post_button = None
                 
-                try:
-                    post_button = await self.page.wait_for_selector('[data-testid="tweetButtonInline"]', timeout=5000)
-                except:
-                    pass
+                # Try multiple selectors for the post button
+                post_selectors = [
+                    '[data-testid="tweetButtonInline"]',      # Primary selector
+                    '[data-testid="tweetButton"]',             # Alternative
+                    'button:has-text("Post")',                 # By text
+                    'button[aria-label*="post" i]',           # By aria-label
+                ]
+                
+                for selector in post_selectors:
+                    try:
+                        post_button = await self.page.wait_for_selector(selector, timeout=3000)
+                        if post_button:
+                            logger.info(f"✅ Found post button with selector: {selector}")
+                            break
+                    except:
+                        continue
                 
                 if not post_button:
                     try:
-                        post_button = await self.page.wait_for_selector('[data-testid="tweetButton"]', timeout=5000)
+                        post_button = await self.page.wait_for_selector('[data-testid="tweetButtonInline"]', timeout=5000)
                     except:
                         pass
                 
@@ -612,7 +624,25 @@ class TwitterAutomation(SocialMediaAutomation):
                         'error': 'Could not find Post button'
                     }
                 
-                await post_button.click()
+                # Check if button is enabled
+                is_enabled = await post_button.is_enabled()
+                logger.info(f"Post button enabled: {is_enabled}")
+                
+                # Try scrolling into view first
+                try:
+                    await post_button.scroll_into_view_if_needed()
+                except:
+                    pass
+                
+                # Try multiple click methods for robustness
+                try:
+                    await post_button.click(force=True)
+                except:
+                    try:
+                        await self.page.click('[data-testid="tweetButtonInline"]', force=True)
+                    except:
+                        await post_button.click()
+                
                 logger.info("Post button clicked!")
                 
             except Exception as e:

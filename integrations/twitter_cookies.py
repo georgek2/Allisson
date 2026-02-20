@@ -92,19 +92,21 @@ class TwitterCookieAuth:
             return False
         
         try:
-            # Create cookie jar from our cookies dict
-            jar = aiohttp.CookieJar()
-            self.session = aiohttp.ClientSession(cookie_jar=jar)
+            # Create connector and session
+            connector = aiohttp.TCPConnector()
+            self.session = aiohttp.ClientSession(connector=connector)
             
-            # Manually set cookies
+            # Add cookies to session - they'll be sent with every request
             for name, value in self.cookies.items():
-                self.session.cookie_jar.update_cookies({name: value}, response_url='https://x.com')
+                self.session.cookie_jar.update_cookies({name: value})
             
             logger.info("✅ Created authenticated session with cookies")
             return True
             
         except Exception as e:
             logger.error(f"Failed to create session: {e}")
+            import traceback
+            traceback.print_exc()
             return False
     
     async def close_session(self):

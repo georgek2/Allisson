@@ -8,7 +8,11 @@ This script tests the TwitterAutomation class and the full Hannah agent integrat
 import asyncio
 import os
 import logging
+import sys
 from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Configure logging
 logging.basicConfig(
