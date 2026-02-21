@@ -1,16 +1,25 @@
-"""
-ASGI config for Allisson Empire project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.0/howto/deployment/asgi/
-"""
+# config/asgi.py
 
 import os
 from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+from django.urls import path
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
-# This is what Daphne looks for
-application = get_asgi_application()
+# Import your WebSocket consumer
+from api.consumers import TaskConsumer
+
+application = ProtocolTypeRouter({
+    # Regular HTTP requests → Django
+    "http": get_asgi_application(),
+
+    # WebSocket connections → Channels
+    "websocket": AuthMiddlewareStack(
+        URLRouter([
+            path("ws/tasks/", TaskConsumer.as_asgi()),
+        ])
+    ),
+})
+

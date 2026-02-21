@@ -115,11 +115,18 @@ class TwitterAutomationFixed:
                 "Failed to launch system Chrome. Ensure Google Chrome/Chromium is installed, CHROME_PATH is set to the binary path, or Playwright's 'chrome' channel is available."
             )
         
+        # Load saved session if available
+        storage_state = None
+        if self.session_file.exists():
+            logger.info(f"Loading saved session from {self.session_file}")
+            storage_state = str(self.session_file)
+        
         self.context = await self.browser.new_context(
             viewport={'width': 1920, 'height': 1080},
             user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             locale='en-US',
             timezone_id='America/New_York',
+            storage_state=storage_state,
         )
         
         await self.context.add_init_script("""
@@ -173,11 +180,10 @@ class TwitterAutomationFixed:
         try:
             logger.info("Starting Twitter login...")
             
-            # Try to use saved session first
+            # If session was loaded during context creation, verify it's still valid
             if self.session_file.exists():
-                logger.info("Loading saved session...")
+                logger.info("Verifying saved session...")
                 try:
-                    await self.context.storage_state(path=str(self.session_file))
                     await self.page.goto('https://twitter.com/home', wait_until='networkidle', timeout=30000)
                     
                     # Check if we're actually logged in
@@ -189,8 +195,9 @@ class TwitterAutomationFixed:
                             logger.info("✅ Logged in using saved session")
                             return True
                         except:
-                            logger.info("Session expired, will login fresh")
+                            logger.info("Session expired or invalid, will login fresh")
                 except Exception as e:
+                    logger.info(f"Session verification failed: {e}, will login fresh")
                     logger.info(f"Session load failed: {e}, will login fresh")
             
             # Fresh login required
