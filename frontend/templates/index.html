@@ -3,25 +3,547 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Allisson Empire</title>
-  {% load static %}
+  <title>Allisson Empire ✦</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #080808; color: #e0e0e0; }
+    #loading {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #080808;
+      font-family: 'DM Mono', monospace;
+      color: #D4AF37;
+      font-size: 14px;
+      letter-spacing: 0.2em;
+    }
+  </style>
 </head>
 <body>
+
+  <div id="loading">INITIALISING ALLISSON EMPIRE...</div>
   <div id="root"></div>
 
-  <!-- React via CDN (no build step needed for dev) -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Your React component -->
-  <script type="text/babel" src="{% static 'allisson-empire-ui.jsx' %}"></script>
-
   <script type="text/babel">
-    // Mount the app
+
+    const { useState, useEffect, useRef } = React;
+
+    // ── DATA ──────────────────────────────────────────────────────────────────
+
+    const AGENTS = [
+      { id: "allisson", name: "Allisson", role: "CEO",          color: "#D4AF37", icon: "👑", description: "Empire Orchestrator" },
+      { id: "hannah",   name: "Hannah",   role: "Social Media", color: "#FF6B9D", icon: "📱", description: "Twitter · LinkedIn · Facebook" },
+      { id: "lucy",     name: "Lucy",     role: "Research",     color: "#7DD3FC", icon: "🔍", description: "Web Research · Reports" },
+      { id: "mike",     name: "Mike",     role: "Finance",      color: "#86EFAC", icon: "📈", description: "Investments · Markets" },
+      { id: "joseph",   name: "Joseph",   role: "Health",       color: "#FCA5A5", icon: "💪", description: "Fitness · Nutrition" },
+      { id: "melvin",   name: "Melvin",   role: "Freelancing",  color: "#C4B5FD", icon: "💼", description: "Gigs · Content · Ecommerce" },
+      { id: "steve",    name: "Steve",    role: "Monitor",      color: "#FDE68A", icon: "📊", description: "Performance · Quality" },
+    ];
+
+    // ── TYPING HOOK ───────────────────────────────────────────────────────────
+
+    function useTypingEffect(text, speed = 22) {
+      const [displayed, setDisplayed] = useState("");
+      const [done, setDone] = useState(false);
+      useEffect(() => {
+        if (!text) return;
+        setDisplayed(""); setDone(false);
+        let i = 0;
+        const iv = setInterval(() => {
+          if (i < text.length) { setDisplayed(text.slice(0, i + 1)); i++; }
+          else { setDone(true); clearInterval(iv); }
+        }, speed);
+        return () => clearInterval(iv);
+      }, [text]);
+      return { displayed, done };
+    }
+
+    // ── AVATAR ────────────────────────────────────────────────────────────────
+
+    function AllissonAvatar({ speaking }) {
+      return (
+        <div style={{ position: "relative", width: 80, height: 80 }}>
+          {speaking && [0,1,2].map(i => (
+            <div key={i} style={{
+              position: "absolute", inset: 0, borderRadius: "50%",
+              border: "2px solid #D4AF37",
+              animation: `pulse-ring 2s ease-out ${i * 0.6}s infinite`, opacity: 0,
+            }} />
+          ))}
+          <div style={{
+            width: 80, height: 80, borderRadius: "50%",
+            background: "linear-gradient(135deg, #1a1200 0%, #3d2b00 50%, #1a1200 100%)",
+            border: "2px solid #D4AF37",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 32, position: "relative", zIndex: 1,
+            boxShadow: speaking ? "0 0 30px rgba(212,175,55,0.4)" : "0 0 20px rgba(212,175,55,0.15)",
+            transition: "box-shadow 0.3s ease",
+          }}>👑</div>
+        </div>
+      );
+    }
+
+    // ── LEFT SIDEBAR ──────────────────────────────────────────────────────────
+
+    function LeftSidebar({ projects }) {
+      const learning = projects?.learning || [];
+      const building = projects?.building || [];
+      return (
+        <aside style={styles.sidebar}>
+          <div style={styles.sidebarHeader}>
+            <div style={{ fontSize: 10, color: "#D4AF37", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 4, fontFamily: "'DM Mono', monospace" }}>Empire</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>Projects</div>
+          </div>
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ fontSize: 10, color: "#444", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 12, fontFamily: "'DM Mono', monospace" }}>📚 Learning</div>
+            {learning.length === 0
+              ? <div style={{ color: "#333", fontSize: 12, fontStyle: "italic", padding: "8px 0" }}>No learning projects yet</div>
+              : learning.map(p => <ProjectCard key={p.id} project={p} />)
+            }
+          </div>
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ fontSize: 10, color: "#444", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 12, fontFamily: "'DM Mono', monospace" }}>🏗️ Building</div>
+            {building.length === 0
+              ? <div style={{ color: "#333", fontSize: 12, fontStyle: "italic", padding: "8px 0" }}>No build projects yet</div>
+              : building.map(p => <ProjectCard key={p.id} project={p} />)
+            }
+          </div>
+        </aside>
+      );
+    }
+
+    function ProjectCard({ project }) {
+      const agent = AGENTS.find(a => a.id === project.agent);
+      return (
+        <div style={{ background: "#0f0f0f", border: "1px solid #1a1a1a", borderRadius: 10, padding: "12px", marginBottom: 8 }}>
+          <div style={{ fontSize: 12, color: "#ccc", fontWeight: 500, marginBottom: 6, lineHeight: 1.4 }}>{project.title}</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 10, color: agent?.color || "#666" }}>{agent?.name || project.agent}</span>
+            <span style={{ fontSize: 10, color: "#555" }}>{project.topic}</span>
+          </div>
+          <div style={{ marginTop: 8, height: 2, background: "#1a1a1a", borderRadius: 2 }}>
+            <div style={{ height: "100%", width: `${project.progress || 0}%`, background: agent?.color || "#D4AF37", borderRadius: 2 }} />
+          </div>
+        </div>
+      );
+    }
+
+    // ── RIGHT SIDEBAR ─────────────────────────────────────────────────────────
+
+    function RightSidebar({ liveTasks }) {
+      const tasks = liveTasks || [];
+      const statusColor = { running: "#D4AF37", executing: "#D4AF37", completed: "#86EFAC", done: "#86EFAC", failed: "#FCA5A5", queued: "#555", pending: "#555" };
+      const statusLabel = { running: "● Running", executing: "● Running", completed: "✓ Done", done: "✓ Done", failed: "✗ Failed", queued: "○ Queued", pending: "○ Queued" };
+      return (
+        <aside style={{ ...styles.sidebar, borderRight: "none", borderLeft: "1px solid #141414" }}>
+          <div style={styles.sidebarHeader}>
+            <div style={{ fontSize: 10, color: "#D4AF37", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 4, fontFamily: "'DM Mono', monospace" }}>Live</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>Tasks</div>
+            {tasks.some(t => t.status === "running" || t.status === "executing") && (
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#D4AF37", animation: "blink 1.5s infinite", marginTop: 4 }} />
+            )}
+          </div>
+          {tasks.length === 0
+            ? <div style={{ color: "#333", fontSize: 12, fontStyle: "italic", marginTop: 16 }}>No active tasks. Give Allisson a command!</div>
+            : tasks.map(task => {
+                const agent = AGENTS.find(a => a.id === (task.agent_name || "").toLowerCase());
+                const color = statusColor[task.status] || "#555";
+                return (
+                  <div key={task.id} style={{ background: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: 10, padding: "12px", marginBottom: 8, borderLeft: `3px solid ${color}` }}>
+                    <div style={{ fontSize: 11, color: "#aaa", lineHeight: 1.5, marginBottom: 6 }}>
+                      {(task.command || "").slice(0, 60)}{(task.command || "").length > 60 ? "…" : ""}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 10, color: agent?.color || "#666" }}>{agent?.name || task.agent_name}</span>
+                      <span style={{ fontSize: 10, color }}>{statusLabel[task.status] || task.status}</span>
+                    </div>
+                  </div>
+                );
+              })
+          }
+        </aside>
+      );
+    }
+
+    // ── COMMAND BAR ───────────────────────────────────────────────────────────
+
+    function CommandBar({ onResult, loading, setLoading }) {
+      const [command, setCommand] = useState("");
+
+      const submit = async () => {
+        if (!command.trim() || loading) return;
+        const cmd = command.trim();
+        setCommand("");
+        setLoading(true);
+        try {
+          const res = await fetch("/api/execute/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ command: cmd }),
+          });
+          const data = await res.json();
+          onResult({ command: cmd, response: data });
+        } catch (err) {
+          onResult({ command: cmd, response: { success: false, error: "Network error — is the server running?" } });
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div style={{ position: "fixed", bottom: 0, left: 240, right: 240, padding: "16px 24px", background: "linear-gradient(to top, #080808 60%, transparent)", zIndex: 100 }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 12,
+            background: "#0f0f0f", border: `1px solid ${loading ? "#D4AF37" : "#2a2a2a"}`,
+            borderRadius: 14, padding: "12px 16px",
+            boxShadow: loading ? "0 0 20px rgba(212,175,55,0.15)" : "none",
+            transition: "border-color 0.3s, box-shadow 0.3s",
+            maxWidth: 720, margin: "0 auto",
+          }}>
+            <span style={{ fontSize: 18 }}>👑</span>
+            <input
+              value={command}
+              onChange={e => setCommand(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
+              placeholder={loading ? "Allisson is thinking..." : "Give Allisson a command..."}
+              disabled={loading}
+              style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#e0e0e0", fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}
+            />
+            <button onClick={submit} disabled={loading || !command.trim()} style={{
+              background: command.trim() && !loading ? "#D4AF37" : "#1a1a1a",
+              border: "none", borderRadius: 8, padding: "6px 14px",
+              color: command.trim() && !loading ? "#000" : "#444",
+              fontSize: 12, fontWeight: 600,
+              cursor: command.trim() && !loading ? "pointer" : "default",
+              transition: "all 0.2s",
+            }}>
+              {loading ? "..." : "Send ⚡"}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── RESPONSE FEED ─────────────────────────────────────────────────────────
+
+    function ResponseFeed({ messages }) {
+      const bottomRef = useRef(null);
+      useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+      if (messages.length === 0) return null;
+      return (
+        <div style={{ maxWidth: 680, margin: "0 auto 100px", padding: "0 4px" }}>
+          {messages.map((msg, i) => (
+            <div key={i} style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+                <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: "12px 12px 4px 12px", padding: "10px 14px", maxWidth: "80%", fontSize: 13, color: "#ccc", lineHeight: 1.5 }}>
+                  {msg.command}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                <div style={{ fontSize: 20, marginTop: 2 }}>👑</div>
+                <div style={{ background: "#0f0f0f", border: "1px solid #1e1e1e", borderLeft: "3px solid #D4AF37", borderRadius: "4px 12px 12px 12px", padding: "12px 16px", maxWidth: "85%", fontSize: 13, color: "#ccc", lineHeight: 1.7, fontFamily: "'DM Mono', monospace", whiteSpace: "pre-wrap" }}>
+                  {msg.response.success === false
+                    ? <span style={{ color: "#FCA5A5" }}>Error: {msg.response.error}</span>
+                    : (typeof msg.response.result === "string" ? msg.response.result : JSON.stringify(msg.response.result, null, 2))
+                  }
+                </div>
+              </div>
+            </div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
+      );
+    }
+
+    // ── MODALS ────────────────────────────────────────────────────────────────
+
+    function ModalOverlay({ children, onClose }) {
+      return (
+        <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#0f0f0f", border: "1px solid #2a2a2a", borderRadius: 20, padding: 32, width: "100%", maxWidth: 480, maxHeight: "80vh", overflowY: "auto", boxShadow: "0 0 60px rgba(0,0,0,0.8)" }}>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    function NewProjectModal({ onClose, onCreated }) {
+      const [form, setForm] = useState({ agent: "hannah", objective: "", context: "", guidelines: "" });
+      const [loading, setLoading] = useState(false);
+      const handleSubmit = async () => {
+        if (!form.objective.trim()) return;
+        setLoading(true);
+        try {
+          const res = await fetch("/api/projects/", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+          const data = await res.json();
+          onCreated?.(data); onClose();
+        } catch(e) { console.error(e); } finally { setLoading(false); }
+      };
+      return (
+        <ModalOverlay onClose={onClose}>
+          <h2 style={styles.modalTitle}>✦ New Project</h2>
+          <label style={styles.label}>Assign to Agent</label>
+          <select value={form.agent} onChange={e => setForm({...form, agent: e.target.value})} style={styles.select}>
+            {AGENTS.filter(a => a.id !== "allisson").map(a => <option key={a.id} value={a.id}>{a.icon} {a.name} — {a.role}</option>)}
+          </select>
+          <label style={styles.label}>Objective</label>
+          <textarea placeholder="What should this agent achieve?" value={form.objective} onChange={e => setForm({...form, objective: e.target.value})} style={{...styles.input, height: 80, resize: "vertical"}} />
+          <label style={styles.label}>Context</label>
+          <textarea placeholder="Any background info..." value={form.context} onChange={e => setForm({...form, context: e.target.value})} style={{...styles.input, height: 60, resize: "vertical"}} />
+          <label style={styles.label}>Guidelines</label>
+          <textarea placeholder="Rules, tone, constraints..." value={form.guidelines} onChange={e => setForm({...form, guidelines: e.target.value})} style={{...styles.input, height: 60, resize: "vertical"}} />
+          <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+            <button style={styles.btnGold} onClick={handleSubmit} disabled={loading}>{loading ? "Launching..." : "Launch Project ✦"}</button>
+            <button style={styles.btnGhost} onClick={onClose}>Cancel</button>
+          </div>
+        </ModalOverlay>
+      );
+    }
+
+    function AddTaskModal({ onClose }) {
+      const [form, setForm] = useState({ task: "", priority: "normal" });
+      const [loading, setLoading] = useState(false);
+      const handleSubmit = async () => {
+        if (!form.task.trim()) return;
+        setLoading(true);
+        try {
+          await fetch("/api/execute/", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ command: `${form.task} (priority: ${form.priority})` }) });
+          onClose();
+        } catch(e) { console.error(e); } finally { setLoading(false); }
+      };
+      return (
+        <ModalOverlay onClose={onClose}>
+          <h2 style={styles.modalTitle}>⚡ Add Task</h2>
+          <label style={styles.label}>Task Description</label>
+          <textarea placeholder="Describe what you want done..." value={form.task} onChange={e => setForm({...form, task: e.target.value})} style={{...styles.input, height: 100, resize: "vertical"}} />
+          <label style={styles.label}>Priority</label>
+          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+            {["low","normal","high","urgent"].map(p => (
+              <button key={p} onClick={() => setForm({...form, priority: p})} style={{ flex: 1, padding: "8px 0", borderRadius: 8, border: "1px solid", borderColor: form.priority === p ? "#D4AF37" : "#333", background: form.priority === p ? "#D4AF3722" : "transparent", color: form.priority === p ? "#D4AF37" : "#666", cursor: "pointer", fontSize: 11, textTransform: "capitalize", fontFamily: "'DM Sans', sans-serif" }}>{p}</button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 12 }}>
+            <button style={styles.btnGold} onClick={handleSubmit} disabled={loading}>{loading ? "Dispatching..." : "Dispatch Task ⚡"}</button>
+            <button style={styles.btnGhost} onClick={onClose}>Cancel</button>
+          </div>
+        </ModalOverlay>
+      );
+    }
+
+    function AgentResultsModal({ agent, onClose }) {
+      const [data, setData] = useState(null);
+      const [tasks, setTasks] = useState([]);
+      useEffect(() => {
+        fetch("/api/agents/stats/").then(r => r.json()).then(result => setData(result.agents?.[agent.id] || { completed: 0, ongoing: 0, failed: 0 })).catch(() => setData({ completed: 0, ongoing: 0, failed: 0 }));
+        fetch(`/api/tasks/?agent=${agent.name}&limit=10`).then(r => r.json()).then(result => setTasks(result.tasks || [])).catch(() => setTasks([]));
+      }, [agent]);
+      if (!data) return (
+        <ModalOverlay onClose={onClose}>
+          <div style={{ color: "#555", textAlign: "center", padding: 40, fontFamily: "'DM Mono', monospace", fontSize: 12 }}>Loading...</div>
+        </ModalOverlay>
+      );
+      return (
+        <ModalOverlay onClose={onClose}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: `${agent.color}22`, border: `2px solid ${agent.color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>{agent.icon}</div>
+            <div>
+              <h2 style={{ ...styles.modalTitle, margin: 0 }}>{agent.name}</h2>
+              <p style={{ color: agent.color, margin: 0, fontSize: 13 }}>{agent.role}</p>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+            {[["Completed", data.completed, "#86EFAC"], ["Ongoing", data.ongoing, "#FDE68A"], ["Failed", data.failed || 0, "#FCA5A5"]].map(([label, value, color]) => (
+              <div key={label} style={styles.statBox}>
+                <div style={{ fontSize: 28, fontWeight: 700, color }}>{value}</div>
+                <div style={{ fontSize: 12, color: "#666" }}>{label}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ color: "#555", fontSize: 11, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.1em" }}>Recent Tasks</p>
+          {tasks.length === 0
+            ? <p style={{ color: "#333", fontSize: 13, fontStyle: "italic" }}>No tasks yet for {agent.name}.</p>
+            : tasks.map(t => (
+                <div key={t.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: "1px solid #1a1a1a" }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: agent.color, flexShrink: 0, marginTop: 5 }} />
+                  <div>
+                    <div style={{ color: "#ccc", fontSize: 13 }}>{t.command}</div>
+                    <div style={{ color: "#555", fontSize: 11, marginTop: 2 }}>{t.status} · {new Date(t.created_at).toLocaleString()}</div>
+                  </div>
+                </div>
+              ))
+          }
+          <button style={{ ...styles.btnGhost, marginTop: 24, width: "100%" }} onClick={onClose}>Close</button>
+        </ModalOverlay>
+      );
+    }
+
+    // ── MAIN APP ──────────────────────────────────────────────────────────────
+
+    function AllissonEmpire() {
+      const [statusText, setStatusText] = useState("Loading empire status...");
+      const [agentStats, setAgentStats] = useState({});
+      const [liveTasks, setLiveTasks]   = useState([]);
+      const [projects]                  = useState({ learning: [], building: [] });
+      const [messages, setMessages]     = useState([]);
+      const [loading, setLoading]       = useState(false);
+      const [modal, setModal]           = useState(null);
+
+      const { displayed, done } = useTypingEffect(statusText);
+
+      useEffect(() => {
+        fetch("/api/status/")
+          .then(r => r.json())
+          .then(data => {
+            const s = data?.result?.statistics;
+            setStatusText(s
+              ? `Empire online. ${s.total_tasks || 0} total tasks. ${s.completed || 0} completed, ${s.failed || 0} failed. Success rate: ${s.success_rate || "N/A"}.`
+              : data?.result?.message || "All systems operational. Awaiting commands."
+            );
+          })
+          .catch(() => setStatusText("All systems operational. Awaiting commands."));
+
+        fetch("/api/agents/stats/")
+          .then(r => r.json())
+          .then(data => setAgentStats(data.agents || {}))
+          .catch(() => {});
+
+        fetch("/api/tasks/?limit=20")
+          .then(r => r.json())
+          .then(data => setLiveTasks(data.tasks || []))
+          .catch(() => {});
+
+        const ws = new WebSocket(`ws://${window.location.host}/ws/tasks/`);
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === "task_update") {
+            setLiveTasks(prev => {
+              const exists = prev.find(t => t.id === data.task.id);
+              if (exists) return prev.map(t => t.id === data.task.id ? { ...t, ...data.task } : t);
+              return [data.task, ...prev].slice(0, 20);
+            });
+          }
+        };
+        ws.onerror = () => console.warn("WebSocket unavailable — live updates disabled");
+        return () => ws.close();
+      }, []);
+
+      const handleResult = (msg) => {
+        setMessages(prev => [...prev, msg]);
+        fetch("/api/tasks/?limit=20").then(r => r.json()).then(data => setLiveTasks(data.tasks || [])).catch(() => {});
+      };
+
+      return (
+        <>
+          <style>{`
+            @keyframes blink      { 0%,100%{opacity:1} 50%{opacity:0.2} }
+            @keyframes shimmer    { to{background-position:200% center} }
+            @keyframes pulse-ring { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(1.8);opacity:0} }
+            @keyframes fadeIn     { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+            * { scrollbar-width:thin; scrollbar-color:#1a1a1a transparent; }
+            .agent-chip:hover { transform:translateY(-4px) scale(1.03) !important; box-shadow:0 12px 40px rgba(0,0,0,0.6) !important; }
+            .action-btn:hover { transform:scale(1.05) !important; filter:brightness(1.1) !important; }
+          `}</style>
+
+          <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#080808", fontFamily: "'DM Sans', sans-serif", color: "#e0e0e0" }}>
+            <LeftSidebar projects={projects} />
+
+            <main style={{ flex: 1, overflowY: "auto", padding: "40px 32px 120px" }}>
+
+              <div style={{ textAlign: "center", marginBottom: 32, animation: "fadeIn 0.8s ease" }}>
+                <div style={{ fontSize: 11, letterSpacing: "0.25em", color: "#D4AF37", textTransform: "uppercase", fontFamily: "'DM Mono', monospace", marginBottom: 8 }}>✦ Command Interface ✦</div>
+                <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: "clamp(22px, 3vw, 36px)", fontWeight: 700, background: "linear-gradient(135deg, #D4AF37 0%, #F5E27A 40%, #D4AF37 60%, #B8860B 100%)", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 4s linear infinite" }}>
+                  Allisson Superpowered AI Assistant
+                </h1>
+                <p style={{ color: "#555", fontSize: 13, marginTop: 8, letterSpacing: "0.08em" }}>In-charge of an Empire of Sub-agents</p>
+              </div>
+
+              <div style={{ maxWidth: 680, margin: "0 auto 36px", background: "linear-gradient(135deg, #0f0f0f, #111)", border: "1px solid #1e1e1e", borderRadius: 16, padding: "20px 24px", boxShadow: "inset 0 1px 0 #2a2a2a, 0 4px 24px rgba(0,0,0,0.4)", animation: "fadeIn 1s ease 0.3s both" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+                  <AllissonAvatar speaking={!done} />
+                  <div>
+                    <div style={{ fontSize: 10, color: "#D4AF37", letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'DM Mono', monospace", marginBottom: 4 }}>Empire Status Brief</div>
+                    <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: "#888", lineHeight: 1.8, margin: 0 }}>
+                      {displayed}{!done && <span style={{ animation: "blink 0.8s infinite" }}>█</span>}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ maxWidth: 680, margin: "0 auto 36px", display: "flex", gap: 12, justifyContent: "center" }}>
+                <button className="action-btn" onClick={() => setModal("project")} style={{ ...styles.btnGold, fontSize: 13, padding: "10px 20px", transition: "transform 0.2s, filter 0.2s" }}>+ New Project</button>
+                <button className="action-btn" onClick={() => setModal("task")} style={{ ...styles.btnGhost, fontSize: 13, padding: "10px 20px", transition: "transform 0.2s, filter 0.2s" }}>⚡ Add Task</button>
+              </div>
+
+              <div style={{ maxWidth: 780, margin: "0 auto 40px" }}>
+                <div style={{ fontSize: 10, color: "#333", textTransform: "uppercase", letterSpacing: "0.15em", textAlign: "center", marginBottom: 20, fontFamily: "'DM Mono', monospace" }}>Agent Results</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 12 }}>
+                  {AGENTS.filter(a => a.id !== "allisson").map(agent => {
+                    const stats = agentStats[agent.id] || { completed: 0, ongoing: 0 };
+                    return (
+                      <div key={agent.id} className="agent-chip" onClick={() => setModal({ type: "agent", agent })}
+                        style={{ background: "#0d0d0d", border: `1px solid ${agent.color}33`, borderRadius: 14, padding: "16px 12px", textAlign: "center", cursor: "pointer", transition: "transform 0.2s, box-shadow 0.2s", position: "relative", overflow: "hidden" }}>
+                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${agent.color}, transparent)` }} />
+                        <div style={{ fontSize: 26, marginBottom: 8 }}>{agent.icon}</div>
+                        <div style={{ color: "#fff", fontSize: 12, fontWeight: 600, marginBottom: 2 }}>{agent.name}</div>
+                        <div style={{ color: agent.color, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>{agent.role}</div>
+                        <div style={{ display: "flex", justifyContent: "center", gap: 10 }}>
+                          <div style={{ textAlign: "center" }}>
+                            <div style={{ color: "#86EFAC", fontSize: 14, fontWeight: 700 }}>{stats.completed}</div>
+                            <div style={{ color: "#444", fontSize: 9 }}>done</div>
+                          </div>
+                          <div style={{ width: 1, background: "#1a1a1a" }} />
+                          <div style={{ textAlign: "center" }}>
+                            <div style={{ color: "#FDE68A", fontSize: 14, fontWeight: 700 }}>{stats.ongoing}</div>
+                            <div style={{ color: "#444", fontSize: 9 }}>active</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <ResponseFeed messages={messages} />
+            </main>
+
+            <RightSidebar liveTasks={liveTasks} />
+          </div>
+
+          <CommandBar onResult={handleResult} loading={loading} setLoading={setLoading} />
+
+          {modal === "project" && <NewProjectModal onClose={() => setModal(null)} onCreated={handleResult} />}
+          {modal === "task"    && <AddTaskModal    onClose={() => setModal(null)} />}
+          {modal?.type === "agent" && <AgentResultsModal agent={modal.agent} onClose={() => setModal(null)} />}
+        </>
+      );
+    }
+
+    // ── STYLES ────────────────────────────────────────────────────────────────
+
+    const styles = {
+      sidebar:     { width: 240, minWidth: 240, height: "100vh", overflowY: "auto", background: "#090909", borderRight: "1px solid #141414", padding: "32px 16px", flexShrink: 0 },
+      sidebarHeader: { marginBottom: 28 },
+      label:       { display: "block", fontSize: 11, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8, marginTop: 16, fontFamily: "'DM Mono', monospace" },
+      input:       { width: "100%", background: "#0d0d0d", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#e0e0e0", fontSize: 13, fontFamily: "'DM Sans', sans-serif", outline: "none" },
+      select:      { width: "100%", background: "#0d0d0d", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 12px", color: "#e0e0e0", fontSize: 13, fontFamily: "'DM Sans', sans-serif", outline: "none", cursor: "pointer" },
+      btnGold:     { background: "linear-gradient(135deg, #D4AF37, #B8860B)", border: "none", borderRadius: 10, padding: "10px 20px", color: "#000", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" },
+      btnGhost:    { background: "transparent", border: "1px solid #2a2a2a", borderRadius: 10, padding: "10px 20px", color: "#666", fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" },
+      modalTitle:  { fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 700, color: "#D4AF37", marginBottom: 20 },
+      statBox:     { flex: 1, background: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: 12, padding: "16px", textAlign: "center" },
+    };
+
+    // ── MOUNT ─────────────────────────────────────────────────────────────────
+
+    document.getElementById('loading').style.display = 'none';
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<AllissonEmpire />);
+
   </script>
 </body>
 </html>
-
